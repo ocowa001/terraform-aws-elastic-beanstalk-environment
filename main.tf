@@ -345,8 +345,7 @@ data "aws_iam_policy_document" "default" {
 
 data "aws_iam_policy_document" "extended" {
   count = local.enabled ? 1 : 0
-
-  source_json               = join("", data.aws_iam_policy_document.default[*].json)
+  source_policy_documents = [join("", data.aws_iam_policy_document.default[*].json)]
   override_policy_documents = [var.extended_ec2_policy_document]
 }
 
@@ -1159,9 +1158,9 @@ resource "aws_s3_bucket" "elb_logs" {
 }
 
 module "dns_hostname" {
-  source  = "cloudposse/route53-cluster-hostname/aws"
-  version = "0.12.2"
-
+  # source  = "cloudposse/route53-cluster-hostname/aws"
+  # version = "0.12.2"
+  source = "../terraform-aws-route53-cluster-hostname"
   enabled = local.enabled && var.dns_zone_id != "" && var.tier == "WebServer" ? true : false
 
   dns_name = var.dns_subdomain != "" ? var.dns_subdomain : module.this.name

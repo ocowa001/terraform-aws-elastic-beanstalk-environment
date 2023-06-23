@@ -1,29 +1,47 @@
-provider "aws" {
-  region = var.region
+terraform {
+  # backend "s3" {
+  #   region               = "ap-southeast-2"
+  #   bucket               = ""
+  #   dynamodb_table       = ""
+  #   encrypt              = true
+  #   key                  = "terraform_state"
+  #   workspace_key_prefix = ""
+  #   profile              = ""
+  # }
+
 }
+
+###############################################################
+##########################VPC##################################
+###############################################################
+
 
 module "vpc" {
   source  = "cloudposse/vpc/aws"
-  version = "0.28.1"
+  version = "2.1.0"
 
-  cidr_block = "172.16.0.0/16"
+  ipv4_primary_cidr_block  = "10.0.0.0/16"
 
   context = module.this.context
 }
 
 module "subnets" {
   source  = "cloudposse/dynamic-subnets/aws"
-  version = "0.39.8"
+  version = "2.4.1"
 
   availability_zones   = var.availability_zones
   vpc_id               = module.vpc.vpc_id
-  igw_id               = module.vpc.igw_id
-  cidr_block           = module.vpc.vpc_cidr_block
+  igw_id               = [module.vpc.igw_id]
+  ipv4_cidr_block = [ "10.0.0.0/16" ]
   nat_gateway_enabled  = true
   nat_instance_enabled = false
 
   context = module.this.context
 }
+
+###############################################################
+###################ELASTIC BEANSTALK###########################
+###############################################################
 
 module "elastic_beanstalk_application" {
   source  = "cloudposse/elastic-beanstalk-application/aws"
@@ -33,15 +51,18 @@ module "elastic_beanstalk_application" {
 
   context = module.this.context
 }
-
+#Elastic Beanstalk Environment works if all resources in one account 
+#If R53 resources are in a different account clone this module code down 
+#to you local workspace and uncomment provider blocks in the R53 
+#resources and update provider.tf files in the same directory. 
 module "elastic_beanstalk_environment" {
+  #source = "BITBUCKET URL"
   source = "../../"
-
   description                = var.description
   region                     = var.region
   availability_zone_selector = var.availability_zone_selector
-  dns_zone_id                = var.dns_zone_id
-
+  dns_zone_id                = var.dns_zone_id 
+  
   wait_for_ready_timeout             = var.wait_for_ready_timeout
   elastic_beanstalk_application_name = module.elastic_beanstalk_application.elastic_beanstalk_application_name
   environment_type                   = var.environment_type
@@ -119,5 +140,21 @@ data "aws_iam_policy_document" "minimal_s3_permissions" {
       "s3:GetBucketLocation"
     ]
     resources = ["*"]
+  }
+}
+
+locals {
+    default_tags = {
+    # Mandatory tags
+    "msd:application-id"          = "RCA"
+    "msd:cost-centre"             = "183500"
+    "msd:environment-type"        = "dev" # FIXME. it isn't always dev
+    "msd:environment-name"        = "RCA"
+    "msd:resource-accountability" = "ocowa001"
+    "msd:resource-responsibility" = "ocowa001"
+
+    # Optional/useful tags
+    "msd:resource-customer" = "Data Science and Products" # FIXME: this should be the general public maybe
+    "msd:infra-management"  = "Olly Test Environment"
   }
 }

@@ -1,6 +1,6 @@
-region = "us-east-2"
+region = "ap-southeast-2"
 
-availability_zones = ["us-east-2a", "us-east-2b"]
+availability_zones = ["ap-southeast-2a", "ap-southeast-2b"]
 
 namespace = "eg"
 
@@ -60,11 +60,11 @@ elb_scheme = "public"
 
 // https://docs.aws.amazon.com/elasticbeanstalk/latest/platforms/platforms-supported.html
 // https://docs.aws.amazon.com/elasticbeanstalk/latest/platforms/platforms-supported.html#platforms-supported.docker
-solution_stack_name = "64bit Amazon Linux 2018.03 v2.12.17 running Docker 18.06.1-ce"
+solution_stack_name = "64bit Amazon Linux 2 v3.5.8 running PHP 8.1"
 
 version_label = ""
 
-dns_zone_id = ""
+dns_zone_id = "Z03999824LKM2G9DGEHP"
 
 // https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/command-options-general.html
 additional_settings = [
